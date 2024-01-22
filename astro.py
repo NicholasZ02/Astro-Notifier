@@ -1,46 +1,50 @@
 import requests
 
-#Fixed latitude and longitude for Newark
+#Fixed latitude and longitude for Newark.
 URL = "https://www.7timer.info/bin/api.pl?"
 params = dict(
     lon = -74.1741,
     lat = 40.7355,
     product = 'astro',
     unit = 'british',
-    output = 'json'
+    output = 'json',
 )
-r = requests.get(URL, params).json()
 
-#Accessing the first 5 entries which relate to the current day.
-for i in range(5):
-    hour = r['dataseries'][i]['timepoint'] + 1 % 12
-    if(hour < 12):
-        print(f"{hour} PM, ", end='')
+try:
+    response = requests.get(URL, params).json()
+except:
+    quit()
+
+#Uses the API scale from 1(Good)-8(Bad) to give weather descriptions.
+def quality(x):
+    if(x <= 2):
+        return "Excellent"
+    elif(x <= 4):
+        return "Good"
+    elif(x <= 6):
+        return "Fair"
     else:
-        print(f"{hour-12} AM, ", end='')
+        return "Poor"
+
+#Accessing the first few entries which relate to the current and next day.
+#The range and added values change depending on the hour the program runs because of the API.
+#Add a value of 7 when done around 3:00, add a value of 1 when done around 6:00. Switch AM/PM.
+message = ""
+for data in response['dataseries'][:5]:
+    time = data['timepoint'] + 1 % 12
+    if(time < 12):
+        message += f"{time} PM: "
+    elif(time > 24):
+        message += f"{time-24} PM: "
+    else:
+        message += f"{time-12} AM: "
     
-    cloudCover = r['dataseries'][i]['cloudcover']
+    cloudCover = data['cloudcover']
     if(cloudCover < 5):
-        print(f"up to {cloudCover}0% cloud coverage. ", end='')
+        message += f"Up to {cloudCover}0% cloud coverage, "
     else:
-        print(f"up to {cloudCover+1}0% cloud coverage. ", end='')
+        message += f"Up to {cloudCover+1}0% cloud coverage, "
 
-    seeing = r['dataseries'][i]['seeing']
-    if(seeing <= 2):
-        print("Good seeing, ", end='')
-    elif(seeing <= 4):
-        print("Average seeing, ", end='')
-    elif(seeing <= 6):
-        print("Poor seeing, ", end='')
-    else:
-        print("Bad seeing, ", end='')
+    message += f"{quality(data['seeing'])} seeing, {quality(data['transparency'])} transparency.\n"
 
-    transparency = r['dataseries'][i]['transparency']
-    if(transparency <= 2):
-        print("Good transparency.")
-    elif(seeing <= 4):
-        print("Average transparency.")
-    elif(seeing <= 6):
-        print("Poor transparency.")
-    else:
-        print("Bad transparency.")
+print(message)
