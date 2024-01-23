@@ -54,7 +54,7 @@ for data in weatherResponse['dataseries'][:5]:
     message += f"{quality(data['transparency'])} transparency, {quality(data['seeing'])} seeing.\n\n"
 
 #Pushover API Notifier. Only send a message under ideal conditions.
-if(True):
+if(goodClouds):
     pushoverURL = "https://api.pushover.net/1/messages.json"
     imageURL = f"https://www.7timer.info/bin/astro.php?lon={config.LON}&lat={config.LAT}&lang=en&ac=0&unit=metric&output=internal&tzshift=0"
     try:
